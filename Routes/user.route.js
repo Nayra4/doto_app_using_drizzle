@@ -1,6 +1,6 @@
 import { Router } from "express"
 import  {getalluser,getserbyid,createuser,deleteuser,updateuser } from "../schema/user.query.js"
-import bcrypt from "bcrypt"
+import { usersInsertSchema_u } from "../db/validation_schemas.js"
 export const userRoute =Router()
 
 userRoute.get("/",async(req,res)=>{
@@ -27,10 +27,9 @@ userRoute.get("/:id",async(req,res)=>{
 })
 
 userRoute.post("/",async(req,res)=>{
-    const password =await bcrypt.hash(req.body.password_hash,12)
-    const data =await createuser(req.body.name, req.body.email, password)
+    const body=usersInsertSchema_u.parse(req.body)
+    const data =await createuser(body.name, body.email)
     console.log(data);
-    
     if(!data){
         return res.status(404).json({
             error:"something went wrong"
@@ -41,19 +40,22 @@ userRoute.post("/",async(req,res)=>{
         data :data
     })
 })
-userRoute.delete("/:id",async(req,res)=>{
-    const data=await deleteuser(req.params.id);
-    if(!data){
+userRoute.delete("/:id", async (req, res) => {
+    const data = await deleteuser(req.params.id);
+
+    if (!data) {
         return res.status(404).json({
-            error:"something went wrong"
-        })}
-    return res.status(204).json({
-        "massage":"deleted successfuly"
-    })
-})
+            error: "user not found"
+        });
+    }
+
+    return res.status(200).json({
+        message: "deleted successfully",
+        data
+    });
+});
 userRoute.put("/:id",async(req,res)=>{
-    const password =await bcrypt.hash(req.body.password_hash,12)
-    const data=await updateuser(req.params.id,req.body.name, req.body.email, password)
+    const data=await updateuser(req.params.id,req.body.name, req.body.email)
         if(!data){
         return res.status(404).json({
             error:"something went wrong"

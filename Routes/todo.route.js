@@ -1,5 +1,6 @@
 import { Router } from "express"
 import {getall,getbyid,create_todo,delete_todo,update} from "../schema/todo.query.js"
+import { todoInsertSchema } from "../db/validation_schemas.js"
 export const todoRoute =Router()
 
 todoRoute.get("/",async (req,res)=>{
@@ -44,19 +45,26 @@ todoRoute.get("/:id",async (req,res)=>{
         "data":data
     })
 })
-todoRoute.post("/",async(req,res)=>{
-    const data =await create_todo(req.body.user_id, req.body.title, req.body.description, req.body.due_date)
-    console.log(data);
-    
-    if(!data){
+todoRoute.post("/", async (req, res) => {
+    const body = todoInsertSchema.parse(req.body);
+
+    const data = await create_todo(
+        body.userId,
+        body.title,
+        body.description,
+        body.dueDate
+    );
+
+    if (!data) {
         return res.status(404).json({
-            error:"something went wrong"
-        })
+            error: "something went wrong"
+        });
     }
+
     return res.status(201).json({
-        message:"data created successfuly ",
-        data :data
-    })
+        message: "data created successfuly",
+        data
+    });
 })
 todoRoute.delete("/:id",async(req,res)=>{
     const data=await delete_todo(req.params.id);
@@ -69,7 +77,7 @@ todoRoute.delete("/:id",async(req,res)=>{
     })
 })
 todoRoute.put("/:id",async(req,res)=>{
-    const data=await update(req.params.id, req.body.title,  req.body.description,  req.body.due_date,  req.body.is_done)
+    const data=await update(req.params.id, req.body.title,  req.body.description,  req.body.due_date,  req.body.completed)
         if(!data){
         return res.status(404).json({
             error:"something went wrong"

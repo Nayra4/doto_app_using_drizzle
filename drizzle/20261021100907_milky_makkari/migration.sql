@@ -1,0 +1,1 @@
+ALTER TABLE "todos" ALTER COLUMN "user_id" SET DATA TYPE uuid USING "user_id"::uuid;

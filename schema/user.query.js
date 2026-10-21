@@ -1,25 +1,42 @@
-import {pool} from "../db.js"
-
+import {db} from "../db/db.js"
+import { users } from "../db/schema.js"
+import { eq } from "drizzle-orm";
 async function getalluser() {
-    const result=await pool.query("select * from users ")
-    return result.rows
+    const result=await db.select().from(users)
+    return result
 }
 async function getserbyid(id) {
-    const result=await pool.query("select * from users where id=$1",[id])
+    const result=await db.select().from(users).where(eq(users.id,id))
     return result.rows[0]
 }
 
-async function createuser(name,email,password_hash) {
-    const result=await pool.query("insert into users(name,email,password_hash)  VALUES ($1,$2,$3) RETURNING*",[name,email,password_hash])
-    return  result.rows[0]
+async function createuser(name,email) {
+    const result= await db.insert(users).values({
+        name,
+        email
+    }).returning();
+
+    return result;
 }
 async function deleteuser(id) {
-    const result=await pool.query("delete from users where id=$1 RETURNING*",[id])
-    return  result.rows[0]
+    const result = await db
+        .delete(users)
+        .where(eq(users.id, id))
+        .returning();
+
+    return result[0];
 }
-async function updateuser(id,name,email,password_hash){
-    const result= await pool.query("UPDATE users SET name=$1 ,email=$2, password_hash=$3 where id =$4 RETURNING*",[name, email, password_hash, id])
-    return  result.rows[0]
+async function updateuser(id,name,email){
+    const result=await db
+        .update(users)
+        .set({
+            name,
+            email
+        })
+        .where(eq(users.id, id))
+        .returning();
+
+    return result[0];
 }
 
 
